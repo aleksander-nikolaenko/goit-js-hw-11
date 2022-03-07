@@ -35,8 +35,6 @@ const searchFormRef = document.querySelector('#search-form');
 const loadMoreBtnRef = document.querySelector('.load-more'); 
 const galleryRef = document.querySelector('.gallery')
 
-loadMoreBtnRemove();
-
 searchFormRef.addEventListener('submit', onSearchHandler);
 galleryRef.addEventListener('click', onGalleryCardClickHandler);
 loadMoreBtnRef.addEventListener('click', onLoadMoreBtnClickHandler);
