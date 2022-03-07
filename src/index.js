@@ -10,16 +10,16 @@ import { clearListImg } from './js/components/imgCardListClear';
 Notify.init({
   width: '320px',
   fontSize: '20px',
+  timeout: 1500,
+  clickToClose: true,
   position: "center-center"
 });
 
-const loadingParam = {
-  messageFontSize: '50px',
+Loading.init({messageFontSize: '50px',
   messageColor: 'rgb(255,255,255)',
   svgColor: 'rgb(0,0,255)',
   backgroundColor: 'rgb(200,200,200,0.8)',
-  svgSize: '100px',
-};
+  svgSize: '100px',})
 
 const lightbox = new SimpleLightbox('.gallery a', { 
   captions: true,
@@ -41,6 +41,22 @@ searchFormRef.addEventListener('submit', onSearchHandler);
 galleryRef.addEventListener('click', onGalleryCardClickHandler);
 loadMoreBtnRef.addEventListener('click', onLoadMoreBtnClickHandler);
 
+
+const optionsObserver = {
+    rootMargin: '200px',
+};
+const observerGalery = new IntersectionObserver(onIntersectHandler, optionsObserver);
+observerGalery.observe(loadMoreBtnRef);
+
+
+function onIntersectHandler(entries) {
+  entries.forEach( (entry) => {
+    if (entry.isIntersecting) { 
+      onLoadMoreBtnClickHandler();
+    }
+  });
+}
+
 async function onSearchHandler(event) {
   event.preventDefault();
   pixabayApi.query = event.currentTarget.elements.searchQuery.value.trim();
@@ -48,7 +64,7 @@ async function onSearchHandler(event) {
   loadMoreBtnRemove();
   clearListImg(galleryRef);  
   try {
-    Loading.standard('Loading...', loadingParam);
+    Loading.standard('Loading...');
     const dataObj = await pixabayApi.fetchPictures();
     const dataImg = dataObj.data.hits;
     Loading.remove();
@@ -61,6 +77,7 @@ async function onSearchHandler(event) {
     lightbox.refresh(); 
     if (dataObj.data.totalHits > pixabayApi.searchParams.per_page) {
       loadMoreBtnAdd();
+      pixabayApi.lastPage = false;
     }      
   } catch (error) {
         errorCatch(error);
@@ -70,8 +87,11 @@ async function onSearchHandler(event) {
 async function onLoadMoreBtnClickHandler(event) {
   try {
     loadMoreBtnRemove();
+    if (pixabayApi.lastPage) {
+      return Notify.failure('We are sorry, but you have reached the end of search results.'); 
+    }
+    Loading.standard('Loading...');
     pixabayApi.incrementPage();
-    Loading.standard('Loading...', loadingParam);
     const dataObj = await pixabayApi.fetchPictures();
     const dataImg = dataObj.data.hits;
     const imgList = createListImg(dataImg);
@@ -80,8 +100,7 @@ async function onLoadMoreBtnClickHandler(event) {
     Loading.remove();
     lightbox.refresh();
     if (pixabayApi.page > (dataObj.data.totalHits / pixabayApi.searchParams.per_page)) {
-      loadMoreBtnRemove();
-      return Notify.failure('We are sorry, but you have reached the end of search results.');  
+      pixabayApi.lastPage = true;       
     }
     loadMoreBtnAdd();
     } catch (error) {

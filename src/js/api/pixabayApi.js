@@ -4,6 +4,7 @@ const BASE_URL = 'https://pixabay.com/api/';
 
 export default class PixabayApiService {
   constructor() {
+    this.lastPage = false;
     this.searchQuery = '';
     this.page = 1; 
     this.searchParams = {
